@@ -95,28 +95,6 @@ derObjbp <- function(xv, index, BZ, X, M, q, p, n, prob){
   
   return(as.vector(der))
 }
-# compute objective funciton for index-th row of the matrix B
-objbp_owl <- function(xv, index, BZ, X, M, q, p, n, prob){
-  bv <- xv
-  AlphaM <- exp(BZ + matrix(bv,p,1)%*%matrix(M[,index],1,n))
-  AlphaMX <- AlphaM + t(X)
-  obj <- computeAlphaMatrix(AlphaMX, AlphaM, prob)
-
-  return(obj)
-}
-
-# compute derivate function for index-th row of the matrix B
-derObjbp_owl <- function(xv, index, BZ, X, M, q, p, n, prob){
-  bv <- xv
-  AlphaM <- exp(BZ + matrix(bv,p,1)%*%matrix(M[,index],1,n))
-  AlphaMX <- AlphaM + t(X)
-  der <- (computeAlphaDerMatrix(AlphaMX, AlphaM, prob)*AlphaM)%*%M[,index]
-  
-  #print("derBi")
-  #print(der)
-  
-  return(as.vector(der))
-}
 
 # compute  the objective function for the matrix B
 objB <- function(B, ZB0, X, M, lambda2, q, p, n, prob){
@@ -148,7 +126,6 @@ showClassification <- function(PiProb, n, K, round) {
     classification[i] <- perIndex
     classiIndex[perIndex] <- classiIndex[perIndex] + i
   }
-  
   print("classification result:")
   print(table(classification))
   for(i in 1:K) {
@@ -200,26 +177,25 @@ kmLDM <- function(X, M, K, initParameters, initPi, Z_init, lambda1, lambda2, max
   # record the round of the iterations
   round <- 0
   roundB <- 0
-  setRound <- 20
-  roundExchange <- 0
-  initRoundTheta <- 50
-  initRoundB <- 200
+  setRound <- 10
   roundTheta <- 0
-  roundB <- 0
 
   # Rik
   PiProb <- matrix(0, n, K)
   PiProbSum <- rep(0, n)
   PiNeed <- matrix(0, n, 4)
-
-  # record the best lambda
-  lambda1_list <- rep(0, K)
-  lambda2_list <- rep(0, K)
-  Xr <- X / rowSums(X)
-  classIndex <- rep(0, n)
   
   while(TRUE) {
     round <- round + 1
+    
+    #print("round:")
+    #print(round)
+    #print("obj New:")
+    #if(loopFlag) {
+    #  print(objNewB)
+    #} else {
+    #  print(objNewTheta)
+    #}
     
     # estimate the ZK
     for(i in 1:n) {
@@ -250,19 +226,6 @@ kmLDM <- function(X, M, K, initParameters, initPi, Z_init, lambda1, lambda2, max
     # filter near 0 value
     PiProb[PiProb < 1e-10] <- 0
     PiProb <- PiProb / rowSums(PiProb)
-
-    # calculate the lambda1 and lambda2 for every cluster
-    for(i in 1:n) {
-        classIndex[i] <- which(PiProb[i,] == max(PiProb[i,]))
-    }
-    for(i in 1:K) {
-        perIndex <- which(classIndex == i)
-        Xrk <- Xr[perIndex,]
-        Mk <- M[perIndex,]
-        
-        lambda1_list[i] <- quantile(unique(rep(abs(cor(X[perIndex,], method = "spearman")))), lambda1)
-        lambda2_list[i] <- quantile(unique(rep(abs(cor(x = Xrk, y = Mk, method = "spearman")))), lambda2)
-    }
 
     # M-step
 
@@ -304,20 +267,18 @@ kmLDM <- function(X, M, K, initParameters, initPi, Z_init, lambda1, lambda2, max
           BMp <- M%*%Bp
           BZ <- t(BMp) + ZB0
             
-          b_result_per <- proximalQusiNewtonB(objFunc=objbp, derObjFunc=derObjbp, w=bv, lambda=lambda2_list[i], approx_num = approx_num_B, max_linesearch = max_linesearch_B, max_iteration = max_iteration_B, threshold = threshold_B, delta1_threshold = delta1_threshold_B, delta2_threshold = delta2_threshold_B, sy_threshold = sy_threshold_B, max_iteration_coor = max_iteration_B_coor, threshold_coor = threshold_B_coor, BZ=BZ, index=j, X=X, M=M, q=q, p=p, n=n, prob = PiProb[,i])
-          #b_result_per_owl <- lbfgs(call_eval = objbp_owl, call_grad = derObjbp_owl, vars = bv, BZ=BZ, index=j, X=X, M=M, q=q, p=p, n=n, prob = PiProb[,i], orthantwise_c = lambda2_list[i])
+          b_result_per <- proximalQusiNewtonB(objFunc=objbp, derObjFunc=derObjbp, w=bv, lambda=lambda2, approx_num = approx_num_B, max_linesearch = max_linesearch_B, max_iteration = max_iteration_B, threshold = threshold_B, delta1_threshold = delta1_threshold_B, delta2_threshold = delta2_threshold_B, sy_threshold = sy_threshold_B, max_iteration_coor = max_iteration_B_coor, threshold_coor = threshold_B_coor, BZ=BZ, index=j, X=X, M=M, q=q, p=p, n=n, prob = PiProb[,i])
           Bi[j,] <- b_result_per$par
         }
           
         parameters[[i]][[1]] <- Bi
       }
       
-      objNewB <- computeObjf(PiProbSum, n, K, parameters, lambda1_list, lambda2_list)
+      objNewB <- computeObjf(PiProbSum, n, K, parameters, lambda1, lambda2)
       deltaB <- abs(objNewB - objOldB)
 
-      if(deltaB < threshold || round >= max_iteration || (roundExchange < setRound && roundB > initRoundB)) {
+      if(deltaB < threshold || round >= max_iteration) {
           loopFlag <- FALSE
-          roundExchange <- roundExchange + 1
           objNew <- objNewB
           if(verbose) {
             print("Round B is:")
@@ -325,61 +286,37 @@ kmLDM <- function(X, M, K, initParameters, initPi, Z_init, lambda1, lambda2, max
             print("round:")
             print(round)
             print("obj New:")
-            print(objNewB) 
-            print("delta B:")
-            print(objNewB - objOldB)
+            print(objNewB)
             showClassification(PiProb, n, K, round)
-            print('norm2 ZK:')
-            print(computeL2(rep(ZK)))
-            print('norm2 der ZK:')
-            print(computeL2(rep(derZK)))
+            #print('norm2 Z:')
+            #print(computeL2(rep(Z)))
+            #print('norm2 der Z:')
+            #print(computeL2(rep(derZ)))
             print("Pi:")
             print(Pi)
-            for(i in 1:K) {
-              index <- i %% K
-              Z <- ZK[c(1:(K*n)) %% K == index, ]
-              ZB0 <- t(Z)
-              Bi <- parameters[[i]][[1]]
-              objBivalue <- objB(Bi, ZB0, X, M, lambda2_list[i], q, p, n, PiProb[,i])
-              derBi <- derObjB(Bi, ZB0, X, M, lambda2_list[i], q, p, n, PiProb[,i])  
-              #print("per B:")
-              #print(i)
-              #print(Bi)
-              print('norm2 B:')
-              print(computeL2(rep(Bi)))
-              print('norm2 derB:')
-              print(computeL2(derBi))
-            }
+            #for(i in 1:K) {
+            #  Bi <- parameters[[i]][[1]]
+            #  objBivalue <- objB(Bi, ZB0, X, M, lambda2, q, p, n, PiProb[,i])
+            #  derBi <- derObjB(Bi, ZB0, X, M, lambda2, q, p, n, PiProb[,i])  
+            #  print('norm2 B:')
+            #  print(computeL2(rep(Bi)))
+            #  print('norm2 derB:')
+            #  print(computeL2(derBi))
+            #}
+            #print('B max min mean mean_abs:')
+            #print(max(B))
+            #print(min(B))
+            #print(mean(abs(B)))
+            #print(min(abs(B)))
           }
           roundB <- 0
       } else {
-          if(0 && verbose && (round %% setRound == 1)){
-            print("Round B is:")
-            print(roundB)
-            print("round:")
-            print(round)
-            print("obj New:")
-            print(objNewB)
-            print('norm2 ZK:')
-            print(computeL2(rep(ZK)))
-            print('norm2 der ZK:')
-            print(computeL2(rep(derZK)))
-            print("Pi:")
-            print(Pi)
-            for(i in 1:K) {
-              index <- i %% K
-              Z <- ZK[c(1:(K*n)) %% K == index, ]
-              ZB0 <- t(Z)
-              Bi <- parameters[[i]][[1]]
-              objBivalue <- objB(Bi, ZB0, X, M, lambda2_list[i], q, p, n, PiProb[,i])
-              derBi <- derObjB(Bi, ZB0, X, M, lambda2_list[i], q, p, n, PiProb[,i])  
-              print('norm2 B:')
-              print(computeL2(rep(Bi)))
-              print('norm2 derB:')
-              print(computeL2(derBi))
-            }
-            
-          }
+        if(verbose) {
+        print("round:")
+        print(round)
+        print("obj New:")
+        print(objNewB)
+        }
         next
       }
 
@@ -396,56 +333,39 @@ kmLDM <- function(X, M, K, initParameters, initPi, Z_init, lambda1, lambda2, max
         temp2 <- t(temp) * PiProb[,i]
         S <- temp %*% temp2 / sum(PiProb[,i])
       
-        quic_res <- QUIC(S, rho=lambda1_list[i], msg = 0)
+        quic_res <- QUIC(S, rho=lambda1, msg = 0)
         parameters[[i]][[2]] <- quic_res$X
       }
 
-      objNewTheta <- computeObjf(PiProbSum, n, K, parameters, lambda1_list, lambda2_list)
+      objNewTheta <- computeObjf(PiProbSum, n, K, parameters, lambda1, lambda2)
       deltaTheta <- abs(objNewTheta - objOldTheta)
-      if(deltaTheta < threshold || round >= max_iteration || (roundExchange < setRound && roundTheta >= initRoundTheta)) {
+      if(deltaTheta < threshold || round >= max_iteration) {
           loopFlag <- TRUE
-          roundExchange <- roundExchange + 1
           objNew <- objNewTheta
           if(verbose) {
               print("Round Theta is:")
               print(roundTheta)
               print("round:")
               print(round)
-             # for(i in 1:K) {
-             #     print("Per Theta:")
-             #     print(i)
-             #     print(parameters[[i]][[2]])
-             # }
               print("obj New:")
               print(objNewTheta)
-              print("delta:")
-              print(objNewTheta - objOldTheta)
               showClassification(PiProb, n, K, round)
-              print('norm2 ZK:')
-              print(computeL2(rep(ZK)))
-              print('norm2 der ZK:')
-              print(computeL2(rep(derZK)))
+              #print('norm2 Z:')
+              #print(computeL2(rep(Z)))
+              #print('norm2 der Z:')
+              #print(computeL2(rep(derZ)))
               print("Pi:")
               print(Pi)
           }
 
           roundTheta <- 0
       } else {
-          if(0 && verbose && (round %% setRound == 1)) {
-              print("Round Theta is:")
-              print(roundTheta)
-              print("round:")
-              print(round)
-              print("obj New:")
-              print(objNewTheta)
-              print('norm2 ZK:')
-              print(computeL2(rep(ZK)))
-              print('norm2 der ZK:')
-              print(computeL2(rep(derZK)))
-              print("Pi:")
-              print(Pi)
-            
-          }
+        if(verbose) {
+        print("round:")
+        print(round)
+        print("obj New:")
+        print(objNewTheta)
+        }
         next
       }
     }
@@ -496,19 +416,6 @@ kmLDM <- function(X, M, K, initParameters, initPi, Z_init, lambda1, lambda2, max
         print(max(derZK))
         print(min(derZK))
         }
-        #print("PiProb:")
-        #print(PiProb)
-
-        for(i in 1:K) {
-            print("cluster i Prob:")
-            print(i)
-            print("Prob range:")
-            print(range(PiProb[which(classIndex == i),i]))
-            print("Prob error:")
-            errorIndex <- Filter(function(x) { (x <= ((i-1)*n / K)) || (x > (i*n / K)) }, which(classIndex == i))
-            print(errorIndex)
-            print(PiProb[errorIndex,])
-        }
 
         print("iteration stop~")
         break
@@ -528,10 +435,25 @@ kmLDM <- function(X, M, K, initParameters, initPi, Z_init, lambda1, lambda2, max
   }
   EBIC <- EBIC + (E1 + E2)*log(n) + 4*g*E1*log(p) + 2*g*E2*log(p*q)
     
-  print("EBIC:")
-  print(EBIC)
+    PiNeed[,1] <- PiProbMax
+    PiMin <- apply(PiLog, 1, min)
+    for(i in 1:n) {
+        PiNeed[i,2] <- - PiMin[i] + PiProbMax[i]
+        PiNeed[i,3] <- PiNeed[i,2] / PiNeed[i,1]
+        PiNeed[i,4] <- which(PiLog[i,] == PiProbMax[i])
+    }
+
+#  print("PiNeed: ")
+#  print(PiNeed)
+#  if(verbose) {
+    print("objNew:")
+    print(objNew)
+    print("EBIC:")
+    print(EBIC)
+    showClassification(PiProb, n, K, round)
+#  }
   
-  optimalSolution <- list(parameters, Pi, ZK, objNew, EBIC, objNew, lambda1_list, lambda2_list, classIndex)
+  optimalSolution <- list(parameters, Pi, ZK, objNew, EBIC, objNew, mean(derZK), max(derZK), min(derZK))
   return(optimalSolution)
 }
 
@@ -543,7 +465,7 @@ computeEdgesTheta <- function(Theta) {
 computeObjf <- function(PiProbSum, n, K, parameters, lambda1, lambda2) {
     objNew <- - sum(PiProbSum) / n
     for(i in 1:K) {
-      objNew <- objNew + lambda1[i]*sum(abs(parameters[[i]][[2]]))/2 + lambda2[i]*sum(abs(parameters[[i]][[1]]))
+      objNew <- objNew + lambda1*sum(abs(parameters[[i]][[2]]))/2 + lambda2*sum(abs(parameters[[i]][[1]]))
     }
 
     return(objNew)

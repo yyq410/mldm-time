@@ -10,7 +10,7 @@ source("./program/generateSimulation.R")
 
 testTrue <- TRUE
 Toy <- FALSE
-testOther <- FALSE
+testOther <- TRUE
 addRandom <- FALSE
 
 args <- commandArgs()

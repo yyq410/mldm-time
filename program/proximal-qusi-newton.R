@@ -63,7 +63,8 @@ softthrehold <- function(a, b){
 
 # set near zero value to zero~
 filter_dir <- function(direction){
-  threshold <- 1e-6
+  #threshold <- 1e-6
+  threshold <- 1e-10
   direction[abs(direction) < threshold] <- 0
   return(direction)
 }
@@ -149,7 +150,7 @@ coordinateDescentD <- function(w, gammat, Q, Qh, gt, lambda, max_iteration, thre
   }
   
   direction <- wt - w
-  direction <- filter_dir(direction)
+  # direction <- filter_dir(direction)
   direction <- scale_dir(direction)
   # print('direction scale not zero number:')
   # print(sum(abs(direction)>1e-10))
@@ -167,7 +168,7 @@ L1_norm <- function(x){
 linesearch <- function(objFunc, derObjFunc, w, direction, lambda, max_linesearch, f0, g0, delta1, delta2, ...){
   beta <- 0.5
   alpha <- 1
-  k <- 8
+  k <- 0
   exist <- FALSE
   wt <- w
   ret <- list()

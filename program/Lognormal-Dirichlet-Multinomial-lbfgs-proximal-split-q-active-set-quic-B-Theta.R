@@ -257,8 +257,8 @@ softthrehold <- function(a, b){
 
 # set near zero value to zero~
 filter_dir <- function(direction){
-  threshold <- 1e-6
-  #threshold <- 1e-10
+  #threshold <- 1e-6
+  threshold <- 1e-10
   direction[abs(direction) < threshold] <- 0
   return(direction)
 }
@@ -344,7 +344,7 @@ coordinateDescentD <- function(w, gammat, Q, Qh, gt, lambda, max_iteration, thre
   }
 
   direction <- wt - w
-  direction <- filter_dir(direction)
+ # direction <- filter_dir(direction)
   direction <- scale_dir(direction)
  # print('direction scale not zero number:')
  # print(sum(abs(direction)>1e-10))
@@ -855,7 +855,7 @@ LDM <- function(X, M, n, p, q, B, B0, Theta, Z, lambda1, lambda2, max_iteration,
         # estimate the Theta
         Z_center <- t(t(Z) - B0)
         S <- t(Z_center)%*%Z_center/n
-        quic_res <- QUIC(S, rho=lambda1, msg = 0)
+        quic_res <- QUIC(S, rho=lambda1)
         Theta <- quic_res$X
         objNew_Theta <- computeObjf(X, M, B, Theta, Z, lambda1, lambda2)
         delta_Theta <- abs(objNew_Theta - objOld_Theta)
@@ -914,10 +914,10 @@ LDM <- function(X, M, n, p, q, B, B0, Theta, Z, lambda1, lambda2, max_iteration,
     }
 
     delta = abs(objNew - objOld)
-    if(FALSE) {
-    print('delta:')
     print('delta:')
     print(delta)
+    if(FALSE) {
+    print('delta:')
     print("objNew")
     print(objNew)
     print("objOld")

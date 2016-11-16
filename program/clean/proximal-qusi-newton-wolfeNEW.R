@@ -63,7 +63,8 @@ softthrehold <- function(a, b){
 
 # set near zero value to zero~
 filter_dir <- function(direction){
-  threshold <- 1e-6
+  #threshold <- 1e-6
+  threshold <- 1e-10
   direction[abs(direction) < threshold] <- 0
   return(direction)
 }
@@ -149,7 +150,7 @@ coordinateDescentD <- function(w, gammat, Q, Qh, gt, lambda, max_iteration, thre
   }
   
   direction <- wt - w
-  direction <- filter_dir(direction)
+  # direction <- filter_dir(direction)
   direction <- scale_dir(direction)
   # print('direction scale not zero number:')
   # print(sum(abs(direction)>1e-10))
@@ -167,7 +168,7 @@ L1_norm <- function(x){
 linesearch <- function(objFunc, derObjFunc, w, direction, lambda, max_linesearch, f0, g0, delta1, delta2, ...){
   beta <- 0.5
   alpha <- 1
-  k <- 8
+  k <- 0
   exist <- FALSE
   wt <- w
   ret <- list()
@@ -211,12 +212,13 @@ linesearch <- function(objFunc, derObjFunc, w, direction, lambda, max_linesearch
   #     return(ret)
   # }
   dg0 <- d1 + lambda*L1_norm(w)
+  gradDir <- d1 * delta1
   #print('dg0:')
   #print(dg0)
   #print('lambda*L1_norm(w):')
   #print(lambda*L1_norm(w))
-  d1 <- d1 + lambda*(L1_norm(w+direction) - L1_norm(w))
-  d1 <- d1*delta1
+  #d1 <- d1 + lambda*(L1_norm(w+direction) - L1_norm(w))
+  #d1 <- d1*delta1
   
   while(k <= max_linesearch){
     alpha <- beta^k
@@ -228,8 +230,8 @@ linesearch <- function(objFunc, derObjFunc, w, direction, lambda, max_linesearch
       print('alpha:')
       print(alpha)
     }
-    part <- alpha*d1
-    
+   # part <- alpha*d1
+    part <- alpha * gradDir + alpha * delta1 * (L1_norm(w + alpha*direction) - L1_norm(w))
     k <- k + 1
     # print('f0:')
     # print(f0)
@@ -239,17 +241,17 @@ linesearch <- function(objFunc, derObjFunc, w, direction, lambda, max_linesearch
     # print(part)
     if(f1 <= f0 + part){
       g1 <- derObjFunc(xv=w+alpha*direction, ...)
-      dg1 <- as.numeric(t(g1)%*%direction) + alpha*lambda*L1_norm(w+direction)
+     # dg1 <- as.numeric(t(g1)%*%direction) + alpha*lambda*L1_norm(w+direction)
       #print('dg1:')
       #print(dg1)
       #print('lambda*L1_norm(w+alpha*direction):')
       #print(alpha*lambda*L1_norm(w+direction))
-      if(abs(dg1/dg0) <= delta2){
+     # if(abs(dg1/dg0) <= delta2){
         # print('line search ok~')
         exist <- TRUE
         wt <- w+alpha*direction
         break
-      }
+     # }
     }
   }
   

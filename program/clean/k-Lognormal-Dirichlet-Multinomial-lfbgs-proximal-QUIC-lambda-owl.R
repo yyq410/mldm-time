@@ -95,28 +95,6 @@ derObjbp <- function(xv, index, BZ, X, M, q, p, n, prob){
   
   return(as.vector(der))
 }
-# compute objective funciton for index-th row of the matrix B
-objbp_owl <- function(xv, index, BZ, X, M, q, p, n, prob){
-  bv <- xv
-  AlphaM <- exp(BZ + matrix(bv,p,1)%*%matrix(M[,index],1,n))
-  AlphaMX <- AlphaM + t(X)
-  obj <- computeAlphaMatrix(AlphaMX, AlphaM, prob)
-
-  return(obj)
-}
-
-# compute derivate function for index-th row of the matrix B
-derObjbp_owl <- function(xv, index, BZ, X, M, q, p, n, prob){
-  bv <- xv
-  AlphaM <- exp(BZ + matrix(bv,p,1)%*%matrix(M[,index],1,n))
-  AlphaMX <- AlphaM + t(X)
-  der <- (computeAlphaDerMatrix(AlphaMX, AlphaM, prob)*AlphaM)%*%M[,index]
-  
-  #print("derBi")
-  #print(der)
-  
-  return(as.vector(der))
-}
 
 # compute  the objective function for the matrix B
 objB <- function(B, ZB0, X, M, lambda2, q, p, n, prob){
@@ -304,8 +282,8 @@ kmLDM <- function(X, M, K, initParameters, initPi, Z_init, lambda1, lambda2, max
           BMp <- M%*%Bp
           BZ <- t(BMp) + ZB0
             
-          b_result_per <- proximalQusiNewtonB(objFunc=objbp, derObjFunc=derObjbp, w=bv, lambda=lambda2_list[i], approx_num = approx_num_B, max_linesearch = max_linesearch_B, max_iteration = max_iteration_B, threshold = threshold_B, delta1_threshold = delta1_threshold_B, delta2_threshold = delta2_threshold_B, sy_threshold = sy_threshold_B, max_iteration_coor = max_iteration_B_coor, threshold_coor = threshold_B_coor, BZ=BZ, index=j, X=X, M=M, q=q, p=p, n=n, prob = PiProb[,i])
-          #b_result_per_owl <- lbfgs(call_eval = objbp_owl, call_grad = derObjbp_owl, vars = bv, BZ=BZ, index=j, X=X, M=M, q=q, p=p, n=n, prob = PiProb[,i], orthantwise_c = lambda2_list[i])
+          #b_result_per <- proximalQusiNewtonB(objFunc=objbp, derObjFunc=derObjbp, w=bv, lambda=lambda2_list[i], approx_num = approx_num_B, max_linesearch = max_linesearch_B, max_iteration = max_iteration_B, threshold = threshold_B, delta1_threshold = delta1_threshold_B, delta2_threshold = delta2_threshold_B, sy_threshold = sy_threshold_B, max_iteration_coor = max_iteration_B_coor, threshold_coor = threshold_B_coor, BZ=BZ, index=j, X=X, M=M, q=q, p=p, n=n, prob = PiProb[,i])
+          b_result_per <- lbfgs(call_eval = objbp, call_grad = derObjbp, vars = bv, BZ=BZ, index=j, X=X, M=M, q=q, p=p, n=n, prob = PiProb[,i], orthantwise_c = lambda2_list[i], invisible = 1, max_iterations = 500)
           Bi[j,] <- b_result_per$par
         }
           
