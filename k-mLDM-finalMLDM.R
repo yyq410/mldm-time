@@ -217,8 +217,8 @@ print("##############      k-mLDM Begin       ##############")
 print("#####################################################")
 
 time0 <- proc.time()
-length1 <- 1
-length2 <- 1
+#length1 <- 1
+#length2 <- 1
 for(j in 1:length2){
   if(j > 1){
     loopFlag = TRUE;
@@ -412,8 +412,8 @@ print("##############      k-mLDM Begin       ##############")
 print("#####################################################")
 
 time0 <- proc.time()
-length1 <- 1
-length2 <- 1
+#length1 <- 1
+#length2 <- 1
 for(j in 1:length2){
   if(j > 1){
     loopFlag = TRUE;
