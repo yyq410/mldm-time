@@ -10,8 +10,8 @@ K <- as.numeric(args[9])
 t <- as.numeric(args[10]) 
 }
 
-load("./simulation-test-new-lambda-afterTuning/p-20-q-4-n-200-K-2-cluster-hub/graph-20-4-200-2-5-cluster-hub.RData")
-load("./simulation-test-new-lambda-afterTuning/p-20-q-4-n-200-K-2-cluster-hub/result-20-4-200-2-5-cluster-hub.RData")
+load("./simulation-test-new-lambda-afterTuning-scaleMTuning-shortB-filter-exchange/p-50-q-5-n-400-K-2-cluster-cluster/graph-50-5-400-2-3-cluster-cluster.RData")
+load("./simulation-test-new-lambda-afterTuning-scaleMTuning-shortB-filter-exchange/p-50-q-5-n-400-K-2-cluster-cluster/result-50-5-400-2-3-cluster-cluster.RData")
 
 trueParameters <- graph_parameters[[9]]
 kmLDM_after <- simulation[[3]]

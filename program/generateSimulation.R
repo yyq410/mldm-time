@@ -37,8 +37,8 @@ getInitParameters <- function(X, M, Z_mean) {
 
 generateSimulation <- function(n, p, q, graph_number, index) {
   # the probability of B[i,j] != 0
-  probB <- 0.8
-  bound <- 0.8
+  probB <- 0.85
+  bound <- 0.5
   # the probability is a big OTU
   probB0 <- 0.2
   max_B0l <- 6
@@ -50,7 +50,7 @@ generateSimulation <- function(n, p, q, graph_number, index) {
   graph <- graph_set[graph_number]
   
   # generate theta with specific graph
-  g <- huge.generator(n, p, graph=graph, v = 0.5)
+  g <- huge.generator(n, p, graph=graph, v = 0.4)
   # the covariance matrix 
   Sigma <- g$sigma
   # the precision matrix
@@ -68,10 +68,6 @@ generateSimulation <- function(n, p, q, graph_number, index) {
   M <- gm$data
   #muMLeft <- index * 2
   #muMRight <- (index + 0.5) * 2
-  muMLeft <- index
-  muMRight <- (index + 0.5) * index
-  muM <- runif(q, muMLeft, muMRight)
-  M <- M + muM
   covM <- gm$sigma
   # Mscale <- scale(M, center=TRUE, scale=TRUE)
   
@@ -108,10 +104,16 @@ generateSimulation <- function(n, p, q, graph_number, index) {
     }
   }
   
+  
   # compute the alpha p*n
   part1 <- t(B)%*%t(M) + B0
   part2 <- t(Z)
   Alpha <- exp(part1 + part2)
+  
+  muMLeft <- index
+  muMRight <- (index + 0.5) * index
+  muM <- runif(q, muMLeft, muMRight)
+  M <- M + muM
   
   library('HMP')
   # sampling from the dirichlet.multinomial distribution
@@ -120,18 +122,13 @@ generateSimulation <- function(n, p, q, graph_number, index) {
   start <- 5000
   # the maximization number of per sample
   end <- 10000
-  while(TRUE) {
-    for (i in 1:n){
-      perSum <- floor(runif(1, start, end))
-      data[i,] <- Dirichlet.multinomial(c(perSum), Alpha[,i])
-    }
-    test <- colMeans(data)
-    print("test colMeans")
-    print(sum(abs(test) < 0.5))
-    if(sum(abs(test) < 1) == 0) {
-        break
-    }
+  perData <- rep(0, p)
+  for (i in 1:n){
+    perSum <- floor(runif(1, start, end))
+    perData <- Dirichlet.multinomial(c(perSum), Alpha[,i])
+    data[i,] <- perData
   }
+
   res <- list()
   res[[1]] <- data
   res[[2]] <- M

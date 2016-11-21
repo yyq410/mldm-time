@@ -8,10 +8,11 @@ library(huge)
 
 source("./program/generateSimulation.R")
 
-testTrue <- TRUE
+testTrue <- FALSE
 Toy <- FALSE
-testOther <- TRUE
+testOther <- FALSE
 addRandom <- FALSE
+showFlag <- FALSE
 
 args <- commandArgs()
 n <- as.numeric(args[8])
@@ -21,7 +22,7 @@ q <- as.numeric(args[7])
 K <- as.numeric(args[9])
 t <- as.numeric(args[10])
 
-dir <- 'simulation-test-new-lambda-afterTuning/'
+dir <- 'simulation-test-new2/'
 dir.create(dir)
 
 graph_list <- list()
@@ -59,7 +60,7 @@ trueParameters <- list()
     print("colMeans M")
     print(colMeans(res[[2]]))
     trueParameters[[i]] <- res[[3]]
-  
+  if(showFlag) {
     print("B:")
     print(trueParameters[[i]][[1]])
     print("Theta:")
@@ -73,6 +74,7 @@ trueParameters <- list()
     print("covM:")
     print(trueParameters[[i]][[5]])
   }
+  }
 }
 
 graph <- ""
@@ -85,6 +87,12 @@ subDir <- paste(dir, 'p-', as.character(p), '-q-', as.character(q), '-n-',as.cha
 dir.create(subDir)
 
 Mscale <- scale(M, center = TRUE, scale = TRUE)
+for(i in 1:K) {
+  print("cluster M:")
+  print(i)
+  print("range M:")
+  print(range(Mscale[((i-1)*n+1):(i*n),]))
+}
 
 otherResults <- list()
 if(testOther) {
@@ -158,9 +166,11 @@ for(i in 1:K) {
   Zmldm[perIndex,] <- resi[[4]]
   basis <- basis + length(perIndex)
 }
-initParametersmLDM <- initParameters
+initParametersmLDM <- initParameters 
+if(showFlag) {
 print("init Parameters:")
 print(initParameters)
+}
 Z_init <- Zmldm
 
 ZK_init <- matrix(0, K*K*n, p)
@@ -201,16 +211,16 @@ approx_num_Z <- 10
 max_linesearch_Z <- 30
 approx_num_B <- 10
 max_linesearch_B <- 30
-max_iteration_B <- 500
+max_iteration_B <- 100
 threshold_B <- 1e-5
 delta1_threshold_B <- 1e-4
 delta2_threshold_B <- 0.9
 sy_threshold_B <- 1e-6
 max_iteration_B_coor <- 20
 threshold_B_coor <- 1e-6
-verbose <- TRUE
-source("./program/clean/k-Lognormal-Dirichlet-Multinomial-lfbgs-proximal-QUIC-lambda.R")
-source("./program/clean/proximal-qusi-newton.R")
+verbose <- FALSE
+source("./program/clean/k-Lognormal-Dirichlet-Multinomial-lfbgs-proximal-QUIC-lambda-testZ.R")
+source("./program/clean/proximal-qusi-newton-coor.R")
 
 print("#####################################################")
 print("##############      k-mLDM Begin       ##############")
@@ -251,8 +261,8 @@ for(j in 1:length2){
           ZK_init <- solution[[3]]
         }
       }
-      print('memory used:')
-      print(memory.profile())
+      #print('memory used:')
+      #print(memory.profile())
       
     }
     
@@ -266,13 +276,13 @@ for(j in 1:length2){
   }
 }
 time1 <- proc.time()
-print('used time for LDM:')
-print(time1 - time0)
+#print('used time for LDM:')
+#print(time1 - time0)
 
 print("################################################")
 print("###########        mLDM Tuning        ##########")
 print("################################################")
-source("./program/clean/mLDM-B-Theta-noScaleM.R")
+source("./program/clean/mLDM-B-Theta-ScaleM.R")
 source("./program/clean/Lognormal-Dirichlet-Multinomial-lbfgs-proximal-split-q-active-set-quic-B-Theta.R")
 
 classification_final <- kmLDM_result[[9]]
@@ -302,7 +312,9 @@ for(i in 1:K) {
 
 print("************************************************")
 print("after mLDM tuning:")
+if(showFlag) {
 print(finalParameters)
+}
 kmLDM_after <- list(finalParameters, Pi_final, ZK_final, Zmldm_final, lambda1_final, lambda2_final, classification_final)
 print("************************************************")
 
@@ -352,8 +364,10 @@ for(i in 1:K) {
   basis <- basis + length(perIndex)
 }
 #initParametersmLDM <- initParameters
-
+if(showFlag) {
 print(initParameters)
+}
+
 Z_init <- Zmldm
 
 ZK_init <- matrix(0, K*K*n, p)
@@ -396,16 +410,16 @@ approx_num_Z <- 10
 max_linesearch_Z <- 30
 approx_num_B <- 10
 max_linesearch_B <- 30
-max_iteration_B <- 500
+max_iteration_B <- 200
 threshold_B <- 1e-5
 delta1_threshold_B <- 1e-4
 delta2_threshold_B <- 0.9
 sy_threshold_B <- 1e-6
 max_iteration_B_coor <- 20
 threshold_B_coor <- 1e-6
-verbose <- TRUE
-source("./program/clean/k-Lognormal-Dirichlet-Multinomial-lfbgs-proximal-QUIC-lambda.R")
-source("./program/clean/proximal-qusi-newton.R")
+verbose <- FALSE
+source("./program/clean/k-Lognormal-Dirichlet-Multinomial-lfbgs-proximal-QUIC-lambda-testZ.R")
+source("./program/clean/proximal-qusi-newton-coor.R")
 
 print("#####################################################")
 print("##############      k-mLDM Begin       ##############")
@@ -458,7 +472,7 @@ for(j in 1:length2){
 
 # record all results for LDM model
 kmLDM_record <- list(kmLDM_result, kmLDM_result_all, lambda1_list, lambda2_list)
-
+if(showFlag) {
 print("#############################################")
 print("##########     TRUE PARAMETERS     ##########")
 print("#############################################")
@@ -477,7 +491,7 @@ for(i in 1:K) {
   print("covM:")
   print(trueParameters[[i]][[5]])
 }
-
+}
 simulation <- list(kmLDM_record, otherResults, kmLDM_after)
 
 resultFile <- paste(subDir, 'result-', as.character(p), '-', as.character(q), '-', as.character(n), "-", as.character(K), "-", as.character(t), '-', graph , ".RData", sep="")
