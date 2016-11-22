@@ -50,7 +50,7 @@ generateSimulation <- function(n, p, q, graph_number, index) {
   graph <- graph_set[graph_number]
   
   # generate theta with specific graph
-  g <- huge.generator(n, p, graph=graph, v = 0.4)
+  g <- huge.generator(n, p, graph=graph)
   # the covariance matrix 
   Sigma <- g$sigma
   # the precision matrix
@@ -64,7 +64,7 @@ generateSimulation <- function(n, p, q, graph_number, index) {
   
   # generate meta data
   #M <- mvrnorm(n, rep(0,q), diag(rep(1,q)))
-  gm <- huge.generator(n, q, graph=graph, v = 0.5)
+  gm <- huge.generator(n, q, graph=graph)
   M <- gm$data
   #muMLeft <- index * 2
   #muMRight <- (index + 0.5) * 2

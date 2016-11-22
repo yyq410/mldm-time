@@ -303,6 +303,7 @@ getActiveSet <- function(w, gt, lambda, d){
 coordinateDescentD <- function(w, gammat, Q, Qh, gt, lambda, max_iteration, threshold){
   d <- nrow(Q)
   wt <- w
+  wt_old <- wt
   activeSet <- getActiveSet(w, gt, lambda, d)
   act <- activeSet$act
   act_size <- activeSet$num
@@ -315,7 +316,8 @@ coordinateDescentD <- function(w, gammat, Q, Qh, gt, lambda, max_iteration, thre
   #max_iteration <- round(activeSet$num*0.5)
   round <- 0
   Bt <- diag(gammat*rep(1,d)) - Q%*%Qh
-  delta <- 1
+  delta <- 1 
+  isNan <- FALSE
 
   while(delta > threshold && round < max_iteration){
     round <- round + 1
@@ -333,19 +335,25 @@ coordinateDescentD <- function(w, gammat, Q, Qh, gt, lambda, max_iteration, thre
 
     delta <- sum(abs(wt - wt_old)) / d
 
-    if(is.infinite(delta) || is.na(delta)){
+    if(sum(is.infinite(delta)) || sum(is.na(delta))){
         print('coordinate error!')
         print(delta)
         print('alpha:')
         print(alpha)
+        isNan <- TRUE 
+        break
     }
     #print('delta:')
     #print(delta)
   }
-
-  direction <- wt - w
- # direction <- filter_dir(direction)
+  
+  if(!isNan) {
+    direction <- wt - w
+  } else {
+    direction <- wt_old - w
+  }
   direction <- scale_dir(direction)
+  direction <- filter_dir(direction)
  # print('direction scale not zero number:')
  # print(sum(abs(direction)>1e-10))
 
@@ -712,7 +720,11 @@ LDM <- function(X, M, n, p, q, B, B0, Theta, Z, lambda1, lambda2, max_iteration,
   setRound <- 5
   exchangeRound <- 0
   maxRoundB <- 50
-  maxRoundTheta <- 50
+  maxRoundTheta <- 50 
+
+  # test if Z is abnormal
+  isZ_abnormal <- FALSE
+  max_Z <- 700
 
   objNew_B <- 0
   objNew_Theta <- 0
@@ -763,6 +775,15 @@ LDM <- function(X, M, n, p, q, B, B0, Theta, Z, lambda1, lambda2, max_iteration,
     #print("Matrix Z:")
     #print(Z)
     
+    if(sum(abs(Z) > max_Z)|| sum(is.na(Z)) || sum(is.infinite(Z))) {
+      isZ_abnormal <- TRUE
+      print("iteration stop!")
+      print("valus of Z is abnormal!!!!!!!!!")
+      print("return the latest result~")
+
+      break
+    }
+
     #print('Z max min mean:')
     #print(max(Z))
     #print(min(Z))
@@ -855,7 +876,7 @@ LDM <- function(X, M, n, p, q, B, B0, Theta, Z, lambda1, lambda2, max_iteration,
         # estimate the Theta
         Z_center <- t(t(Z) - B0)
         S <- t(Z_center)%*%Z_center/n
-        quic_res <- QUIC(S, rho=lambda1)
+        quic_res <- QUIC(S, rho=lambda1, msg = 0)
         Theta <- quic_res$X
         objNew_Theta <- computeObjf(X, M, B, Theta, Z, lambda1, lambda2)
         delta_Theta <- abs(objNew_Theta - objOld_Theta)
@@ -914,10 +935,10 @@ LDM <- function(X, M, n, p, q, B, B0, Theta, Z, lambda1, lambda2, max_iteration,
     }
 
     delta = abs(objNew - objOld)
-    print('delta:')
-    print(delta)
     if(FALSE) {
     print('delta:')
+    print('delta:')
+    print(delta)
     print("objNew")
     print(objNew)
     print("objOld")
@@ -938,6 +959,6 @@ LDM <- function(X, M, n, p, q, B, B0, Theta, Z, lambda1, lambda2, max_iteration,
   EBIC <- computeEBIC(objNew, B, Theta, p, q, n, lambda1, lambda2)
 #  print("EBIC")
 #  print(EBIC)
-  optimalSolution <- list(B, B0, Theta, Z, lambda1, lambda2, objList, EBIC, edges1_list, edges2_list, edges1_vary_list, edges2_vary_list)
+  optimalSolution <- list(B, B0, Theta, Z, lambda1, lambda2, objList, EBIC, edges1_list, edges2_list, edges1_vary_list, edges2_vary_list, isZ_abnormal)
   return(optimalSolution)
 }

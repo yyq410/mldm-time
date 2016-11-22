@@ -22,7 +22,7 @@ q <- as.numeric(args[7])
 K <- as.numeric(args[9])
 t <- as.numeric(args[10])
 
-dir <- 'simulation-test-new2/'
+dir <- 'simulation-test-new-best/'
 dir.create(dir)
 
 graph_list <- list()
@@ -145,8 +145,8 @@ corm_list <- c()
 
 kmLDM_result <- list()
 kmLDM_result_all <- list()
-source("./program/clean/mLDM-B-Theta-noScaleM.R")
-source("./program/clean/Lognormal-Dirichlet-Multinomial-lbfgs-proximal-split-q-active-set-quic-B-Theta.R")
+source("./program/mLDM-B-Theta-noScaleM.R")
+source("./program/Lognormal-Dirichlet-Multinomial-lbfgs-proximal-split-q-active-set-quic-B-Theta.R")
 
 print("##########################################")
 print("######### mLDM initialization ############")
@@ -218,9 +218,9 @@ delta2_threshold_B <- 0.9
 sy_threshold_B <- 1e-6
 max_iteration_B_coor <- 20
 threshold_B_coor <- 1e-6
-verbose <- FALSE
-source("./program/clean/k-Lognormal-Dirichlet-Multinomial-lfbgs-proximal-QUIC-lambda-testZ.R")
-source("./program/clean/proximal-qusi-newton-coor.R")
+verbose <- TRUE
+source("./program/k-Lognormal-Dirichlet-Multinomial-lfbgs-proximal-QUIC-lambda-testZ.R")
+source("./program/proximal-qusi-newton-coor.R")
 
 print("#####################################################")
 print("##############      k-mLDM Begin       ##############")
@@ -282,8 +282,8 @@ time1 <- proc.time()
 print("################################################")
 print("###########        mLDM Tuning        ##########")
 print("################################################")
-source("./program/clean/mLDM-B-Theta-ScaleM.R")
-source("./program/clean/Lognormal-Dirichlet-Multinomial-lbfgs-proximal-split-q-active-set-quic-B-Theta.R")
+source("./program/mLDM-B-Theta-ScaleM.R")
+source("./program/Lognormal-Dirichlet-Multinomial-lbfgs-proximal-split-q-active-set-quic-B-Theta.R")
 
 classification_final <- kmLDM_result[[9]]
 print("classification_final:")
@@ -346,8 +346,8 @@ print(initPi)
 corx_list <- c()
 corm_list <- c()
 
-source("./program/clean/mLDM-B-Theta-noScaleM.R")
-source("./program/clean/Lognormal-Dirichlet-Multinomial-lbfgs-proximal-split-q-active-set-quic-B-Theta.R")
+source("./program/mLDM-B-Theta-noScaleM.R")
+source("./program/Lognormal-Dirichlet-Multinomial-lbfgs-proximal-split-q-active-set-quic-B-Theta.R")
 
 Zmldm <- matrix(0, n*K, p)
 res <- list()
@@ -417,9 +417,9 @@ delta2_threshold_B <- 0.9
 sy_threshold_B <- 1e-6
 max_iteration_B_coor <- 20
 threshold_B_coor <- 1e-6
-verbose <- FALSE
-source("./program/clean/k-Lognormal-Dirichlet-Multinomial-lfbgs-proximal-QUIC-lambda-testZ.R")
-source("./program/clean/proximal-qusi-newton-coor.R")
+verbose <- TRUE
+source("./program/k-Lognormal-Dirichlet-Multinomial-lfbgs-proximal-QUIC-lambda-testZ.R")
+source("./program/proximal-qusi-newton-coor.R")
 
 print("#####################################################")
 print("##############      k-mLDM Begin       ##############")
