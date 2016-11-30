@@ -111,6 +111,10 @@ getActiveSet <- function(w, gt, lambda, d){
   return(active)
 }
 
+L2_norm <- function(x) {
+    return(sqrt(sum(x*x)))
+}
+
 # get the direciton via coordinate descent
 coordinateDescentD <- function(w, gammat, Q, Qh, gt, lambda, max_iteration, threshold){
   d <- nrow(Q)
@@ -119,8 +123,10 @@ coordinateDescentD <- function(w, gammat, Q, Qh, gt, lambda, max_iteration, thre
   activeSet <- getActiveSet(w, gt, lambda, d)
   act <- activeSet$act
   act_size <- activeSet$num
-  #act <- c(1:d)
-  #act_size <- d
+  if(act_size == 0) {
+    act <- c(1:d)
+    act_size <- d
+  }
   #print('active set size:')
   #print(act_size)
   
@@ -140,19 +146,53 @@ coordinateDescentD <- function(w, gammat, Q, Qh, gt, lambda, max_iteration, thre
     for(index in 1:act_size){
       i <- act[index]
       a <- Bt[i,i]
-      b <- gt[i] + Bt[i,]%*%(wt-w) - a*wt[i]
-      
-      wt[i] <- softthrehold(-b, lambda)/a
+      tryCatch({
+        b <- gt[i] + t(Bt[i,])%*%(wt-w) - a*wt[i]
+        wt[i] <- softthrehold(-b, lambda)/a
+     #if(FALSE) { 
+     }, warning = function(warn) {
+        print("coordinate warning:")
+        print("a:")
+        print(a)
+        print("b:")
+        print(b)
+        print("lambda:")
+        print(lambda)
+     }, error = function(err) {
+        print("coordinate error begin!")
+        print("index:")
+        print(i)
+        print("gt i")
+        print(gt[i])
+        print("a")
+        print(a)
+        print("wt i")
+        print(wt[i])
+        print("Bt[i,]")
+        print(Bt[i,])
+        print(length(Bt[i,]))
+        print("wt - w")
+        print(wt - w)
+        print(length(wt - w))
+        stop("coordinate error end!")
+     #}
+     })
     }
     
     delta <- sum(abs(wt - wt_old)) / d
     
-    if(sum(is.infinite(delta)) || sum(is.na(delta))){
+    if(sum(is.infinite(delta)) || sum(is.na(delta)) || L2_norm(wt) > 5000*L2_norm(w)){
       print('coordinate error!')
       print("wt")
       print(wt)
       print("delta:")
       print(delta)
+      print("a:")
+      print(a)
+      print("b:")
+      print(b)
+      print("lambda:")
+      print(lambda)
       isNan <- TRUE
       break
     }
@@ -352,7 +392,7 @@ proximalQusiNewtonB <- function(objFunc, derObjFunc, w, lambda, approx_num, max_
     
     exist <- line$exist
     if(!exist){
-      # print('line search failed!!!')
+       #print('line search failed!!!')
       break
     }
     wt <- line$wt
