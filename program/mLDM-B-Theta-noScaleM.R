@@ -56,7 +56,7 @@ library('dirmult')
 library("psych")
 library("MASS")
 
-mLDM <- function(X, M, Z_mean = 1, max_iteration = 2000, threshold = 1e-4, approx_num_Z = 10, max_linesearch_Z = 30, model_selection_num = 4, approx_num_B = 10, max_linesearch_B = 30, max_iteration_B = 500, threshold_B = 1e-5, delta1_threshold_B = 1e-4, delta2_threshold_B = 0.9, sy_threshold_B = 1e-6, max_iteration_B_coor = 20, threshold_B_coor = 1e-6, ratio1 = 0.6, ratio2 = 0.9, verbose = FALSE){
+mLDM <- function(X, M, Z_mean = 1, max_iteration = 2000, threshold = 1e-4, approx_num_Z = 10, max_linesearch_Z = 30, model_selection_num = 4, approx_num_B = 10, max_linesearch_B = 30, max_iteration_B = 100, threshold_B = 1e-2, delta1_threshold_B = 1e-4, delta2_threshold_B = 0.9, sy_threshold_B = 1e-6, max_iteration_B_coor = 20, threshold_B_coor = 1e-6, ratio1 = 0.6, ratio2 = 0.9, verbose = FALSE){
 #  source('./Lognormal-Dirichlet-Multinomial-lbfgs-proximal-split-q-active-set-quic.R')
  # M <- scale(M, center = TRUE, scale = TRUE)
   n <- nrow(X)
@@ -68,7 +68,7 @@ mLDM <- function(X, M, Z_mean = 1, max_iteration = 2000, threshold = 1e-4, appro
   spearman_ef_otu <- corr.test(x = data.frame(Xr), y = data.frame(M), method="spearman")
   cor_x <- cor(X, method = "spearman")
   cor_m <- spearman_ef_otu$r
-  if(verbose) {
+  if(verbose && 0) {
     print("cor x:")
     print(cor_x)
     print("cor m:")
@@ -105,7 +105,7 @@ mLDM <- function(X, M, Z_mean = 1, max_iteration = 2000, threshold = 1e-4, appro
     model_selection_num <- 1;
   }
 
-  if(verbose) {
+  if(verbose && 0) {
     print("cor x list: ")
     print(sort(cor_x_list))
     print("cor m list:")
@@ -129,7 +129,7 @@ mLDM <- function(X, M, Z_mean = 1, max_iteration = 2000, threshold = 1e-4, appro
   
   length1 <- length(lambda1_list)
   length2 <- length(lambda2_list)
-  if(verbose) {
+  if(verbose && 0) {
     print("lambda 1 list:")
     print(lambda1_list)
     print("lambda 2 list:")
@@ -191,12 +191,14 @@ mLDM <- function(X, M, Z_mean = 1, max_iteration = 2000, threshold = 1e-4, appro
   #print('used time for LDM:')
   #print(time1 - time0)
 
-  print("lambda1:")
-  print(LDM_result[[5]])
-  print("lambda2:")
-  print(LDM_result[[6]])
+ # print("lambda1:")
+ # print(LDM_result[[5]])
+ # print("lambda2:")
+ # print(LDM_result[[6]])
   # record all results for LDM model
-  LDM_record <- list(LDM_result,LDM_result_all, lambda1_list, lambda2_list)
+  #LDM_record <- list(LDM_result,LDM_result_all, lambda1_list, lambda2_list)
+  LDM_record <- list(LDM_result, lambda1_list, lambda2_list)
+
   
   warnings()
   

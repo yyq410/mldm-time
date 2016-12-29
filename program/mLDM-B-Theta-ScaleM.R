@@ -56,7 +56,7 @@ library('dirmult')
 library("psych")
 library("MASS")
 
-mLDM <- function(X, M, Z_mean = 1, max_iteration = 2000, threshold = 1e-4, approx_num_Z = 10, max_linesearch_Z = 30, model_selection_num = 4, approx_num_B = 10, max_linesearch_B = 30, max_iteration_B = 500, threshold_B = 1e-5, delta1_threshold_B = 1e-4, delta2_threshold_B = 0.9, sy_threshold_B = 1e-6, max_iteration_B_coor = 20, threshold_B_coor = 1e-6, ratio1 = 0.6, ratio2 = 0.9, verbose = FALSE){
+mLDM <- function(X, M, Z_mean = 1, max_iteration = 2000, threshold = 1e-4, approx_num_Z = 10, max_linesearch_Z = 30, model_selection_num = 4, approx_num_B = 10, max_linesearch_B = 30, max_iteration_B = 100, threshold_B = 1e-3, delta1_threshold_B = 1e-4, delta2_threshold_B = 0.9, sy_threshold_B = 1e-6, max_iteration_B_coor = 20, threshold_B_coor = 1e-6, ratio1 = 0.6, ratio2 = 0.9, verbose = FALSE){
 #  source('./Lognormal-Dirichlet-Multinomial-lbfgs-proximal-split-q-active-set-quic.R')
   M <- scale(M, center = TRUE, scale = TRUE)
   n <- nrow(X)
@@ -196,7 +196,8 @@ mLDM <- function(X, M, Z_mean = 1, max_iteration = 2000, threshold = 1e-4, appro
   print("lambda2:")
   print(LDM_result[[6]])
   # record all results for LDM model
-  LDM_record <- list(LDM_result,LDM_result_all, lambda1_list, lambda2_list)
+  #LDM_record <- list(LDM_result,LDM_result_all, lambda1_list, lambda2_list)
+  LDM_record <- list(LDM_result, lambda1_list, lambda2_list)
   
   warnings()
   
