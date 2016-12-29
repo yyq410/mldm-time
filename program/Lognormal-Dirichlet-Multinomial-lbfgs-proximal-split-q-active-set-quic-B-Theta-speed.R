@@ -341,7 +341,12 @@ coordinateDescentD <- function(w, gammat, Q, Qh, gt, lambda, max_iteration, thre
 
     if(sum(is.infinite(delta)) || sum(is.na(delta)) || L2_norm(wt) > 5000*L2_norm(w)){
         print('coordinate error!')
+        print("delta:")
         print(delta)
+        print("L2 wt:")
+        print(L2_norm(wt))
+        print("L2 wt_old:")
+        print(L2_norm(wt_old))
         isNan <- TRUE 
         break
     }
@@ -353,9 +358,19 @@ coordinateDescentD <- function(w, gammat, Q, Qh, gt, lambda, max_iteration, thre
     direction <- wt - w
   } else {
     direction <- wt_old - w
+    print("L2 norm direction:")
+    print(L2_norm(direction))
   }
   direction <- scale_dir(direction)
+  if(sum(is.na(direction)) || sum(is.infinite(direction))) {
+      print("direction scale error!!!!")
+      print(L2_norm(direction))
+  }
   direction <- filter_dir(direction)
+  if(sum(is.na(direction)) || sum(is.infinite(direction))) {
+      print("direction error!!!!")
+      print(L2_norm(direction))
+  }
  # print('direction scale not zero number:')
  # print(sum(abs(direction)>1e-10))
 
@@ -408,7 +423,7 @@ linesearch <- function(objFunc, derObjFunc, w, direction, lambda, max_linesearch
   if(sum(is.na(direction))!=0){
       print('linesearch direction NaN!!!!')
       print('NaN direction:')
-      print(direction)
+     # print(direction)
       ret$exist <- FALSE
       ret$wt <- w
       ret$value <- f0
@@ -754,11 +769,12 @@ LDM <- function(X, M, n, p, q, B, B0, Theta, Z, lambda1, lambda2, max_iteration,
     timeZ0 <- proc.time()
     # estimate the Z
     for(i in 1:n){
+     # print(i)
       z_i <- Z[i,]
       x_i <- X[i,]
       mu_i <- t(B)%*%M[i,]
       
-      z_i_result <- lbfgs(call_eval=objZi, call_grad=derObjZi, vars=z_i, mu_i=mu_i, x_i=x_i, Theta=Theta, n=n, B0=B0, invisible=1, m=approx_num_Z, max_linesearch=max_linesearch_Z, max_iterations = 500, epsilon = 1e-4)
+      z_i_result <- lbfgs(call_eval=objZi, call_grad=derObjZi, vars=z_i, mu_i=mu_i, x_i=x_i, Theta=Theta, n=n, B0=B0, invisible=1, m=approx_num_Z, max_linesearch=max_linesearch_Z, max_iterations = 500, epsilon = 1e-2)
       
       Z[i,] <- z_i_result$par
       derZ[i,] <- derObjZi(Z[i,], mu_i, x_i, Theta, n, B0)
@@ -886,7 +902,7 @@ LDM <- function(X, M, n, p, q, B, B0, Theta, Z, lambda1, lambda2, max_iteration,
         timeTheta0 <- proc.time()
         Z_center <- t(t(Z) - B0)
         S <- t(Z_center)%*%Z_center/n
-        quic_res <- QUIC(S, rho=lambda1, msg = 0, tol = 1e-3, maxIter = 500)
+        quic_res <- QUIC(S, rho=lambda1, msg = 0, maxIter = 500, tol = 1e-2)
         Theta <- quic_res$X
         timeTheta1 <- proc.time()
         print("Theta time:")
