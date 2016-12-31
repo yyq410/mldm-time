@@ -9,12 +9,13 @@ parser.add_argument("-b", "--biom", type=str, required=True, help="The biom file
 parser.add_argument("-o", "--result_dir", type=str, required=True,
                     help="Specify the output dir path of the result file")
 parser.add_argument("-m", "--meta", type=str, required=True, help="The meta table (samples (rows) * meta (columns)),\
-                          corresponding to the sample list file; the first column is sample names and the first row is:   \
+                          corresponding to the sample list file; the first column is sample names and the first row is:\
                           sample_ids    meta1   meta2   ...")
 
 otu_group = parser.add_argument_group("OTUs", description="Filter OTUs")
 otu_group.add_argument("-omin", "--otu_min", type=float, default=0.8, \
-                       help="Step 1: In every sample, OTUs of which sizes are more than the quantile will be saved")
+                       help="Step 1: In every sample, OTUs of which sizes are more than the quantile will be saved (OTUs\
+                        with size <= 1 are removed at first)")
 otu_group.add_argument("-otop", "--otu_top", type=float, default=0.5, \
                        help="Step 2: OTUs of which average sizes in non-zero samples are more than the quantile\
                         will be saved")
@@ -159,6 +160,7 @@ class ProcessBiom:
         print "Step 3: %d OTUs are filtered!" % (len(otu_ids2) - len(otu_ids3))
         print "Finally %d OTUs are saved~" % (len(otu_ids3))
 
+    # remove samples with too small sizes or too big sizes
     def filter_samples(self):
         sample_size = self.table.sum(axis="sample")
         # Step 4.1: Samples of which sizes are less than the quantile will be removed
@@ -179,6 +181,12 @@ class ProcessBiom:
 
         print "%d samples are saved~" % (len(sample_final))
 
+    # save filtered results into result_dir
+    # X N * P
+    # M N * Q
+    # meta_names Q * 1
+    # otu_annotations P * 1
+    # sample_names N * 1
     def save_result(self):
         # otu table N * P
         X = self.table.matrix_data.todense().transpose()
@@ -220,6 +228,8 @@ class ProcessBiom:
             sys.exit()
 
 
+# return the index in x which satisfy the condition
+# the condition is function with bool as return value
 def which(x, condition):
     flag = map(condition, x)
     return filter(lambda per: flag[per], range(len(flag)))
