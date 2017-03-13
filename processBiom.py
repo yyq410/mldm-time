@@ -1,3 +1,4 @@
+# -*- coding:utf-8 -*-
 from biom import load_table
 import os
 import numpy as np
@@ -122,7 +123,7 @@ class ProcessBiom:
         otu_ids_set = []
         otu_names = np.array(self.table.ids(axis="observation"))
         # Step 1: In every sample, OTUs of which sizes are more than the quantile will be saved
-        # 第一步: 每个样本中根据OTU大小挑选OTU,过滤掉大小不超过1,且在分位数otu_min一下的OTU
+        # 第一步:每个样本中根据OTU大小挑选OTU,过滤掉大小不超过1,且在分位数otu_min一下的OTU
         for per in range(n):
             per_data = self.table[:, per]
             (per_nzero_row, per_nzero_col) = per_data.nonzero()
