@@ -122,6 +122,7 @@ class ProcessBiom:
         otu_ids_set = []
         otu_names = np.array(self.table.ids(axis="observation"))
         # Step 1: In every sample, OTUs of which sizes are more than the quantile will be saved
+        # 第一步: 每个样本中根据OTU大小挑选OTU,过滤掉大小不超过1,且在分位数otu_min一下的OTU
         for per in range(n):
             per_data = self.table[:, per]
             (per_nzero_row, per_nzero_col) = per_data.nonzero()
@@ -140,6 +141,7 @@ class ProcessBiom:
         print "Step 1: %d OTUs are filtered! %d OTUs are saved!" % (p - len(otu_ids), len(otu_ids))
 
         # Step 2: OTUs of which average sizes in non-zero samples are more than the quantile will be saved
+        # 第二步: 根据OTU在非零样本中的平均大小来过滤,保留大小超过分位数otu_top的OTU
         otu_size = self.table.sum(axis="observation")
         otu_not0 = self.table.nonzero_counts(axis="observation", binary=True)
         otu_size = otu_size / otu_not0
@@ -151,6 +153,7 @@ class ProcessBiom:
         print "Step 2: %d OTUs are filtered! %d OTUs are saved!" % (len(otu_ids) - len(otu_ids2), len(otu_ids2))
 
         # Step 3: OTUs of which non-zero times in all samples more than the otu_not_zero * N (all samples number) will be saved
+        # 第三步: 根据OTU的非零次数来过滤,过滤掉非零样本数不超过总样本比例的otu_not_zero 的 OTU
         otu_not_zero = self.table.nonzero_counts(axis="observation", binary=True)
         threshold = self.otu_not_zero * n
 
@@ -164,8 +167,10 @@ class ProcessBiom:
     def filter_samples(self):
         sample_size = self.table.sum(axis="sample")
         # Step 4.1: Samples of which sizes are less than the quantile will be removed
+        # 第4.1步 根据样本大小过滤掉size不超过分位数sample_min的样本
         threshold1 = np.percentile(sample_size, self.sample_min * 100)
         # Step 4.2: Samples of which sizes are more than the quantile will be removed
+        # 第4.2步 根据样本大小过滤掉size超过分位数sample_max的样本
         threshold2 = np.percentile(sample_size, (1 - self.sample_max) * 100)
         sample_index = which(sample_size, lambda x: threshold1 <= x <= threshold2)
         sample_final = np.array(self.samples_need)[sample_index]
@@ -210,7 +215,7 @@ class ProcessBiom:
             # save the otu table
             np.savetxt(os.path.join(self.result_dir, "otu_table"), X, fmt="%d")
             # save the meta table
-            np.savetxt(os.path.join(self.result_dir, "meta_table"), M, fmt="%.6f")
+            np.savetxt(os.path.join(self.result_dir, "meta_table"), M, fmt="%.8f")
             # save the sample names
             sample_names = open(os.path.join(self.result_dir, "sample_names.txt"), 'w')
             sample_names.write("\n".join(self.samples_need))
